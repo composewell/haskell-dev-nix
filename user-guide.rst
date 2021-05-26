@@ -217,13 +217,17 @@ Nix Packages and Nix Expressions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Nix package manager installs nix packages and their dependencies
-and makes them available in a "user environment".  A nix package is
-described using a Nix expression. A Nix expression is a recipe
-(known as a derivation) to build (derive) binaries from a source
-package. However, it first tries to install prebuilt binaries from
-the `nix binary repository <https://cache.nixos.org>`_. Nix expressions
-for all packages can be found in the `nix expression repository
+and makes them available in a "user environment".  A Nix expression
+is a recipe (known as a derivation) to build (derive) package
+binaries from package sources.  Nix distribution is defined by
+a nix expression containing a collection of nix expressions for
+all packages which can be found in the `nix expression repository
 <https://github.com/NixOS/nixpkgs>`_.
+
+When we install a package, nix first tries to find prebuilt binaries
+from the `nix binary repository <https://cache.nixos.org>`_ if the
+binaries are not found in the cache then the package is built from
+sources using the nix expression.
 
 `See this reference manual <https://nixos.org/nixpkgs/manual/>`_ for
 defining nix packages using nix expressions.
@@ -234,19 +238,10 @@ Nix Distribution
 Nix Channels
 ~~~~~~~~~~~~
 
-Nix packages are distributed through nix channels. Channels are specified in
-https://github.com/NixOS/nixpkgs-channels.  Branches in that repository
-correspond to available channels. Examples of some available channels are:
+A channel specifies a particular version of the nixpkgs definition to be used,
+usually from the https://github.com/NixOS/nixpkgs repository.
 
-+------------------------+----------------------------------------------------+
-| nixpkgs-unstable       | Packages for Nix on Mac/Linux                      |
-+------------------------+----------------------------------------------------+
-| nixos-16.03            | Packages for NixOS 16.03                           |
-+------------------------+----------------------------------------------------+
-| nixos-unstable         | Up to date packages for NixOS                      |
-+------------------------+----------------------------------------------------+
-
-Use the ``nix-channel`` command to manage the channels ::
+Use the ``nix-channel`` command to manage the channels in use ::
 
   $ nix-channel --list
   nixpkgs https://nixos.org/channels/nixpkgs-unstable
@@ -254,35 +249,62 @@ Use the ``nix-channel`` command to manage the channels ::
   # To know the current version of nix
   $ nix-instantiate --eval -E '(import <nixpkgs> {}).lib.version'
 
+Any commit in the https://github.com/NixOS/nixpkgs repository can be
+used as a distribution::
+
+  $ nix-channel --add https://github.com/NixOS/nixpkgs/archive/01dd2b4e738.tar.gz mychannel
+  $ nix-channel --update
+
 You can use any nix expression archive as a channel::
 
   $ nix-channel --add https://github.com/rycee/home-manager/archive/master.tar.gz home-manager
   $ nix-channel --update
 
+However, stable distributions and latest unstable distribution
+are specially tagged or branched and also conveniently accessed via
+https://nixos.org/channels::
+
+  $ nix-channel --add https://nixos.org/channels/nixpkgs-unstable nixpkgs-unstable
+  $ nix-channel --update
+
+Available channels and releases
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Examples of some available channels from https://nixos.org/channels::
+
++------------------------+----------------------------------------------------+
+| nixpkgs-unstable       | Packages for Nix on Mac/Linux                      |
++------------------------+----------------------------------------------------+
+| nixos-20.09            | Packages for NixOS 20.09                           |
++------------------------+----------------------------------------------------+
+| nixos-unstable         | Up to date packages for NixOS                      |
++------------------------+----------------------------------------------------+
+
+Available releases: https://github.com/NixOS/nixpkgs/releases
+
 Upgrading Nix
 ~~~~~~~~~~~~~
 
-nix-channel update sets up new packages to be installed from the new version.
-Note that it will install all the dependencies of the new packages as well
-using the newer specification. So you may have multiple versions of packages
-unless you upgrade the existing packages to use the new specification.
+nix-channel update sets up "new packages" to be installed from the new
+version.  Old packages are not automatically upgraded.  Note that it
+will install all the dependencies of the new packages as well using the
+newer specification.
 
 ::
 
   # To use the latest release for new derivations
   $ nix-channel --update
 
-  # upgrade existing packages
+To upgrade all existing packages from the current nix channel::
+
   $ nix-env --upgrade
 
-Using a stable version
-~~~~~~~~~~~~~~~~~~~~~~
+Upgrading to same versions
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TBD. How to use nixpkgs corresponding to a stable nixos version.
-
-If you have built dynamically linked programs (external to nix) using your current
-installation, the upgrade may break them, to install same versions of all
-packages but use the newer version of nix::
+If you have built dynamically linked programs (external to nix) using
+your current installation, the upgrade may break them, to install same
+versions of all packages but use the newer version of nix::
 
   # Upgrade all packages to the same versions in newer release
   $ nix-env --upgrade --eq
@@ -290,12 +312,12 @@ packages but use the newer version of nix::
 Distribution Implementation Details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* The source of packages is at: https://github.com/NixOS/nixpkgs-channels
+* The source of packages is at: https://github.com/NixOS/nixpkgs
 * Hydra CI system builds from a commit in the source repo and tests
 * New release info is added to: https://releases.nixos.org/?prefix=nixpkgs/
 
-  * git-revision of https://github.com/NixOS/nixpkgs-channels used
-  * A tar of nixpkgs-channels.
+  * git-revision of https://github.com/NixOS/nixpkgs used
+  * A tar of nixpkgs
   * URL to the hydra job e.g. https://hydra.nixos.org/eval/1611864
   * A file containing a list of all store paths (e.g.
     ``/nix/store/2g2lalsi9h1bhk1klwqj5qn5da8lbmb5-nix-3.0pre20200829_f156513-man``)
