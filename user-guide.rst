@@ -341,6 +341,9 @@ Find the version of package::
   $ nix-instantiate --eval -E '(import <nixpkgs> {}).haskellPackages.ghc.version'
   "8.10.4"
 
+  $ nix-instantiate --eval -E '(import (builtins.fetchTarball https://github.com/NixOS/nixpkgs/archive/refs/tags/21.05.tar.gz) {}).haskellPackages.streamly.version'
+  "0.7.3"
+
 You can evaluate any derivation/attributes of any path in the expression::
 
   $ nix-instantiate --eval -E '(import <nixpkgs> {}).haskellPackages.ghc.system'
