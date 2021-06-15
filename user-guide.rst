@@ -246,9 +246,6 @@ Use the ``nix-channel`` command to manage the channels in use ::
   $ nix-channel --list
   nixpkgs https://nixos.org/channels/nixpkgs-unstable
 
-  # To know the current version of nix
-  $ nix-instantiate --eval -E '(import <nixpkgs> {}).lib.version'
-
 Any commit in the https://github.com/NixOS/nixpkgs repository can be
 used as a distribution::
 
@@ -308,6 +305,46 @@ versions of all packages but use the newer version of nix::
 
   # Upgrade all packages to the same versions in newer release
   $ nix-env --upgrade --eq
+
+Grokking the Distribution
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The nixpkgs source for current channels can be found in::
+
+  $ cd ~/.nix-defexpr
+
+To know the current version of nixpkgs::
+
+  $ nix-instantiate --eval -E '(import <nixpkgs> {}).lib.version'
+
+To explore the nix-expressions, find available packages, which sources they are
+built from etc you can grok the current nixpkgs source. Instantiate the
+expression and go to the store path::
+
+Find the source of the current nixpkgs expression::
+
+  $ nix-instantiate --eval -E '<nixpkgs>'
+  /home/harendra/.nix-defexpr/channels/nixpkgs
+
+Find the store path (source) of a release archive::
+
+  $ nix-instantiate --eval -E 'builtins.fetchTarball https://github.com/NixOS/nixpkgs/archive/refs/tags/21.05.tar.gz'
+  "/nix/store/fa7d7b3920mzvbk9ad2nv14gp6n4xpvl-source"
+
+Find the store path of a package::
+
+  $ nix-build --no-out-link "<nixpkgs>" -A zlib
+  /nix/store/mi9z1dmjp95n90lfy3rqifqzxphvnyzh-zlib-1.2.11
+
+Find the version of package::
+
+  $ nix-instantiate --eval -E '(import <nixpkgs> {}).haskellPackages.ghc.version'
+  "8.10.4"
+
+You can evaluate any derivation/attributes of any path in the expression::
+
+  $ nix-instantiate --eval -E '(import <nixpkgs> {}).haskellPackages.ghc.system'
+  "x86_64-linux"
 
 Distribution Implementation Details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
