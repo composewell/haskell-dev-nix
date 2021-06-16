@@ -409,8 +409,9 @@ Post build:
 Functions in nixpkgs
 --------------------
 
-The ``nixpkgs`` channel exports a set returning function which takes the
-config as an argument.  When importing it we can specify the config::
+The ``nixpkgs`` channel's top level expression when evaluated returns a
+function which takes a config set as an argument.  When importing it we
+can specify the config::
 
   let pkgs =
         import <nixpkgs>
@@ -418,7 +419,11 @@ config as an argument.  When importing it we can specify the config::
               config.allowUnfree = true;
             }
 
-The returned set consists of library functions and package derivations.
+It returns a set (pkgs) which consists of a library functions and
+package derivations.
+
+Finding a function's definition
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To find more details about any function. Load ``nixpkgs`` in the nix repl and
 type the function name::
