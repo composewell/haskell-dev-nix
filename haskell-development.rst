@@ -550,6 +550,13 @@ GHC Development with Nix
 
 See https://github.com/alpmestan/ghc.nix/blob/master/default.nix .
 
+Finding sha256 of haskell packages
+----------------------------------
+
+You can find the sha256 of a package on the revisions page:
+
+https://hackage.haskell.org/package/streamly-0.7.0/revisions/
+
 Diagnostics
 -----------
 
@@ -654,3 +661,4 @@ Resources
 * https://github.com/direnv/direnv/wiki/Nix direnv
 * https://github.com/target/lorri/ lorri
 * `Nix based CI <https://github.com/mightybyte/zeus>`_
+* https://scrive.github.io/nix-workshop/index.html
