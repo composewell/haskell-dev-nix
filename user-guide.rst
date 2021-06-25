@@ -518,6 +518,23 @@ attribute path explicitly to search the packages::
 Important Note: If you are inside a ``nix-shell --pure`` environment the
 ``nix-env`` command above may not show any packages.
 
+Exploring Packages via ``nix repl``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The fastest way to browse through the hierarchy of packages in nixpkgs is by
+using the ``nix repl``::
+
+  $ nix repl
+  Welcome to Nix version 2.3.11. Type :? for help.
+
+  nix-repl> :l <nixpkgs>
+  Added 14203 variables.
+
+  nix-repl>
+
+Now you can just use <tab> to list all the possibilities or to complete a
+package name.
+
 Installing packages
 ~~~~~~~~~~~~~~~~~~~
 
