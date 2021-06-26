@@ -1,5 +1,5 @@
-Nix Expression Language
------------------------
+Nix Language
+------------
 
 You can use ``nix repl`` to try out the language interactively. Any expression
 that is typed in the repl is evaluated and its result is printed.
@@ -25,7 +25,7 @@ Arithmetic operations::
     1 + 2
     1 - 2
     1 * 2
-    1 / 2 (note 1/2 would be a path string)
+    1 / 2 (note 1/2 would be a path type string)
     1 < 2
     1 <= 2
     1 > 2
@@ -164,9 +164,8 @@ with:
   let as = { x = "foo"; y = "bar"; };
   in with as; x + y
 
-``with`` can take multiple arguments, it takes the first argument as a
-function and applies it to the rest of its arguments and then consumes the set
-returned by the function::
+Note that ``with a b c`` is equivalent to ``with (a b c)``. Therefore, we can
+write::
 
   with import <nixpkgs> {};
 
@@ -178,7 +177,7 @@ The resulting set consists of attributes from both set1 and set2. If an
 attribute is present in both then set2 overrides set1.
 
 Set operations::
-    
+
     set.attrpath
     set.attrpath or defaultValue
     set ? "attrpath" (does set contain attrpath or not: true/false)
@@ -201,12 +200,7 @@ passed in first::
 Functions
 ~~~~~~~~~
 
-An anonymous function in nix is
-defined as ``{ arg1, arg2, ..., argn }: expr`` where ``arg1``, ``arg2``,
-and ``argn`` are arguments to the function and ``expr`` is the body of
-the function.
-
-Anonymous functions are defined as ``pattern: body``::
+Anonymous functions are defined as ``pattern: expr``::
 
     # single argument function
     x: !x # negation function
@@ -222,6 +216,11 @@ Anonymous functions are defined as ``pattern: body``::
     args@{ x, y, z, ... }: x + y + z + args.a
     { x, y, z, ... } @ args: x + y + z + args.a
 
+If you want to define a function without an argument then pass an empty set as
+argument::
+
+  {}: "hello"
+
 Named functions are just let bindings for anonymous functions::
 
     let f = x: !x
@@ -235,7 +234,7 @@ Calling a function. Whitespace is function application operator::
     # set argument
     f {x = "foo"; y = "bar"; z = "baz";}
 
-First class functions (functions returning functions)::
+Functions are first class, i.e. they can return functions::
 
     let concat = x: y: x + y; # function returning a function
     in builtins.map (concat "foo") [ "bar" "bla" "abc" ] # Currying
@@ -255,48 +254,34 @@ Make the set attributes to be accessed, dynamically ::
     let attr = "lib"
     builtins.getAttr attr nixpkgs
 
-Nix Expression Files
---------------------
+Evaluating expressions
+----------------------
 
-Any nix expression can be stored in a file and the builtin function ``import``
-can be used to load the expression from the file to use it in another
-expression. See the documentation of ``import``.
+Using ``nix eval``
+~~~~~~~~~~~~~~~~~~
 
-For example, to evaluate an expression from a file::
+You can either use ``nix repl`` to interactively evaluate the expressions or
+use ``nix eval`` to evaluate an expression::
 
-  $ nix eval '(import ./filename.nix)'
+  $ nix eval '("hello")'
+  "hello"
+  $ nix eval '(1 + 2)'
+  3
 
-Its common to define a set in a file and use it like this::
+Note the parenthesis to evaluate an expression otherwise it evaluates
+an attribute from ``NIX_PATH``.
 
-  with (import ./definitions.nix); ...
+Do not end the expression with a semicolon.
 
-It can also be written as (see ``with``)::
+Using ``nix-instantiate``
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  with import ./definitions.nix; ...
+We can evaluate a file using ``nix-instantiate``::
 
-If the file defines a function returning a set, we would have to supply the
-function argument to get a set::
-
-  with import <nixpkgs> {};
-
-importing from NIX_PATH
------------------------
-
-``import <nixpkgs> {};`` searches for ``nixpkgs`` in NIX_PATH and imports it.
-
-Printing on stdout
-------------------
-
-You can use ``builtins.trace`` or ``nixpkgs.lib.debug.trace*``
-functions.  For example::
-
-  let nixpkgs = import <nixpkgs> {};
-  in lib.debug.traceSeq (builtins.attrNames nixpkgs.lib) ""
-
-However, when using ``nix eval`` trace would always return some value,
-and any expression evaluation will print that value as well. If we want
-to purely print something on terminal and do not want the value of the
-expression then we can use ``nix-instantiate --eval`` instead.
+  $ cat expr.nix
+  "hello"
+  $ nix-instantiate --eval expr.nix
+  "hello"
 
 Built-in functions
 ------------------
@@ -315,96 +300,91 @@ builtins::
 
     nix-repl> builtins.<tab>
 
-builtins.import
-~~~~~~~~~~~~~~~
+Printing to stdout
+------------------
 
-Any nix expression can be stored in a file and the builtin function
-``import`` can be used to load the expression from the file to use it in
-another expression. ``import filename.nix`` would just be equivalent to
-replacing the import statement with the expression in the file.  If the
-imported path is a directory, the file ``default.nix`` in that directory
-is loaded.
+You can use ``builtins.trace``. For example::
 
-Note that this is different from the import in other languages importing
-function definitions from a file.
+  $ nix eval '(builtins.trace "hello world" "expr")'
+  trace: hello world
+  "expr"
 
-builtins.derivation
-~~~~~~~~~~~~~~~~~~~
+or ``nixpkgs.lib.debug.trace*``::
 
-`builtins.derivation <https://nixos.org/nix/manual/#ssec-derivation>`_ is a
-function to build a package::
+  let nixpkgs = import <nixpkgs> {};
+  in lib.debug.traceSeq (builtins.attrNames nixpkgs.lib) ""
 
-    derivation {
-        name    # package name
-        system  # e.g. "i686-linux" or "x86_64-darwin"
-        builder # build script, a derivation or a path e.g. ./builder.sh
-        args ? []    # command line args to be passed to the builder
-        outputs ? [] # a list of symbolic outputs of the derivation
-                     # e.g.  [ "lib" "headers" "doc" ]
-    }
+Nix Modules: importing a file
+-----------------------------
 
-Builder Environment and Execution
-.................................
+How do we use nix code from a file or organize code over multiple files?
+We can store a nix expression (any nix expression) in a file.  For
+example, ``expr.nix``::
 
-Debugging Note: We can use ``/usr/bin/env`` as the builder script to print the
-environment that is being passed to the builder.
+  $ cat expr.nix
+  [1 2 3]
 
-Every attribute of ``derivation`` is passed as an environment variable
-to the builder process with the following translations:
+The builtin function ``import`` can be used to load the expression from
+the file to use it in another expression::
 
-* A path (e.g., ../foo/sources.tar) type attribute causes the referenced
-  file to be copied to the store; its location in the store is put in the
-  environment variable.
+  $ nix eval '(import ./expr.nix)'
+  [ 1 2 3 ]
 
-  The tree copied in the nix store is made read-only. If the builder depends on
-  the ability to write to this tree in-place then it has to make it writable
-  explicitly. Or it has to copy the tree to the temporary directory.
+The effect of ``import <path>`` is to replace the import statement with the
+contents of the file.
 
-  The copied tree in the nix store has timestamps as 01-Jan-1970, the
-  beginning of the Unix epoch. So you cannot depend on the timestamps.
-* A derivation type attribute causes that derivation to be built prior
-  to the present derivation; its default output path is put in the
-  environment variable.
-* ``true`` is passed as the string ``1``, ``false`` and ``null`` are
-  passed as an empty string.
-* By default, a derivation produces a single output path, denoted
-  as ``out``. ``outputs = [ "lib" "headers" "doc" ]`` causes ``lib``,
-  ``headers`` and ``doc`` to be passed to the builder containing
-  the intended nix store paths of each output.  Each output path
-  is a directory in nix store whose name is a concatenation of the
-  cryptographic hash of all build inputs, the name attribute and the
-  output name. The output directories are created before the build
-  starts, environment variables for each output name are passed to the
-  build script.  The build script stores its output artifacts at those
-  paths.
+::
 
-Other environment variables:
+  $ cat expr.nix
+  {}: [1 2 3]
+  $ nix eval '(import ./expr.nix {})'
+  [ 1 2 3 ]
 
-* ``NIX_BUILD_TOP``: path of the temporary directory for this build.
-* ``NIX_STORE``: the top-level Nix store directory (typically, /nix/store).
+Its common to define a set in a file and use it like this::
 
-These are set to prevent issues when they are not set:
+  $ cat expr.nix
+  {}: {x = "hello";}
+  $ nix eval '(with import ./expr.nix {}; x)'
+  "hello"
 
-* ``TMPDIR``, ``TEMPDIR``, ``TMP``, ``TEMP``=``$NIX_BUILD_TOP``
-* ``PATH=/path-not-set``
-* ``HOME=/homeless-shelter``
+If you want to store multiple definitions in a file you can store them as an
+expression evaluating to a set.
 
-The builder is executed as follows:
+Common mistakes: note that the argument to import must be path type
+string. ``expr.nix`` is not a path type, ``./expr.nix`` is.  A path must
+have a "/" in it::
 
-* cd $TMPDIR/<tmp dir>/
-* Clear the environment and set to the attributes as above
-* If an output path already exists, it is removed
-* The builder is executed with the arguments specified by the attribute args.
-* If the builder exits with exit code 0, it is considered to have succeeded.
-* A log of standard output and error is written to ``/nix/var/log/nix``
+  $ nix eval '(import expr.nix)'
+  error: undefined variable 'expr' at (string):1:9
 
-Post build:
+Nix Modules: importing a directory
+----------------------------------
 
-* The temporary directory is removed (unless the -K option was specified).
-* If the build was successful, Nix scans each output path for references
-  to input paths by looking for the hash parts of the input paths. Since
-  these are potential runtime dependencies, Nix registers them as
-  dependencies of the output paths.
+If the imported path is a directory, the file ``default.nix`` in that
+directory is loaded::
+
+  $ cat ./default.nix
+  {}: {x = "hello";}
+  $ nix eval '(with import ./. {}; x)'
+  "hello"
+
+Module search path
+~~~~~~~~~~~~~~~~~~
+
+A name in angle brackets is treated as a directory name to be imported
+and is searched in ``NIX_PATH``. For example, ``import <nixpkgs> {};``
+searches for the ``nixpkgs`` directory in ``NIX_PATH`` and imports it.
+
+Several nix programs provide a command line flag e.g. ``nix eval -I`` to
+provide search path on command line.
+
+Note that the syntax is like the ``include`` syntax in C.
+
+Further Reading
+---------------
+
+With the knowledge of the fundamentals of the language you can now
+proceed to the nix derivations guide.
 
 Quick References
 ----------------

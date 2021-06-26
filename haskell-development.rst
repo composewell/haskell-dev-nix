@@ -202,87 +202,88 @@ Nix shell sets these environment variables::
 The nix installed C tool chain is then able to use the linker flag
 environment variables to link to the right libraries.
 
-Haskell Derivations
--------------------
+Haskell Language Sets
+---------------------
 
-Haskell Packages
-~~~~~~~~~~~~~~~~
+The ``nixpkgs`` set has two sets under it for Haskell::
 
-See this in nixpkgs/pkgs/top-level/all-packages.nix ::
+  nixpkgs.haskell
+  nixpkgs.haskellPackages
+
+It is really only ``haskell``, ``haskellPackages`` just refers to the set of
+packages in ``nixpkgs.haskell.ghc<prime version>.packages``.
+
+``nixpkgs.haskell``
+~~~~~~~~~~~~~~~~~~~
+
+Haskell derivations and functions live under the ``nixkpkgs.haskell``.
+The attribute path ``nixpkgs.haskell`` is a set that consists of the
+following subsets::
+
+  nixpkgs.haskell.lib # A library of functions
+  nixpkgs.haskell.compiler # A set of haskell compiler packages only
+  nixpkgs.haskell.packages # Per compiler set of haskell packages
+
+And the following functions::
+
+  nixpkgs.haskell.override # override the haskell package set
+  nixpkgs.haskell.overrideDerivation # override mkDerivation
+  nixpkgs.haskell.packageOverrides # override a set of packages
+
+``nixpkgs.haskell`` is defined in
+``nixpkgs/pkgs/top-level/all-packages.nix`` ::
 
   nixpkgs = {
     ...
     haskell = callPackage ./haskell-packages.nix { };
+    ...
+  }
+
+``haskell-packages.nix`` is the nix expression that builds the
+``nixpkgs.haskell`` set.
+
+``nixpkgs.haskell.lib``
+~~~~~~~~~~~~~~~~~~~~~~~
+
+This is a library of functions that help in generating
+haskell package derivations. It is defined in
+``nixpkgs/pkgs/development/haskell-modules/lib.nix``. To see a list of
+all functions use the ``nix-ls`` utility::
+
+  $ nix-ls nixpkgs.haskell.lib
+
+Some commonly used functions are described below:
+
+  * overrideCabal: Override the .cabal of a package
+  * disableCabalFlag/enableCabalFlag
+  * add/append/removeConfigureFlag
+  * overrideSrc: override the src of a package
+  * packageSourceOverrides
+  * doBenchmark/dontBenchmark
+  * doCheck/dontCheck
+  * makePackageSet
+  * markUnbroken
+
+``nixpkgs.haskell.packages``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The ``haskell.packages`` attribute has sets for multiple ghc versions
+under it.
+
+The set of all haskell packages from hackage is ``nixpkgs.haskellPackages``.
+It is defined in nixpkgs/pkgs/top-level/all-packages.nix ::
+
+  nixpkgs = {
+    ...
     haskellPackages = dontRecurseIntoAttrs haskell.packages.ghc883;
     ...
   }
 
-See nixpkgs/pkgs/top-level/haskell-packages.nix::
 
-  haskell = {
-    ...
-    lib
-    compiler = {
-      ...
-      ghcjs
-      ghcHead
-      ghc883
-      ...
-  }
-
-Haskell Attributes
-~~~~~~~~~~~~~~~~~~
-
-::
-
-  nixpkgs.haskell
-  nixpkgs.haskell.compiler
-  nixpkgs.haskell.packages
-  nixpkgs.haskell.packages.ghc865
-  nixpkgs.haskell.packages.ghc883
-  ...
-  nixpkgs.haskellPackages
-
-Haskell Derivation Library
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Override the cabal/build config of a package.
-``nixpkgs.haskell.lib.*`` see
-nixpkgs/pkgs/development/haskell-modules/lib.nix::
-
-  lib = {
-    overrideCabal
-    packageSourceOverrides
-
-    do/dontCoverage
-    do/dontHaddock
-    doBenchmark/dontBenchmark
-    ...
-
-    add/append/removeConfigureFlag
-    addBuildTool(s)
-    addExtraLibrary
-    addBuildDepend
-    ...
-
-    enableLibraryProfiling
-    ...
-
-    shellAware
-  }
-
-Haskell Derivations
-~~~~~~~~~~~~~~~~~~~
+``nixpkgs.haskell.packages``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 See nixpkgs/pkgs/top-level/haskell-packages.nix::
-
-  haskell = {
-    ...
-    packageOverrides
-    packages
-    packages.ghc883.*
-    ...
-  }
 
 ``nixpkgs.haskell.packages.ghcxxx.*`` see 
 nixpkgs/pkgs/development/haskell-modules/make_package_set.nix ::
@@ -651,6 +652,12 @@ Quick References
 * `Nix manual Haskell section <https://nixos.org/nixpkgs/manual/#haskell>`_
 * `cabal2nix: convert cabal file to nix expression <http://hackage.haskell.org/package/cabal2nix>`_
 * `hackage2nix: update Haskell packages in nixpkgs <https://github.com/NixOS/cabal2nix/tree/master/hackage2nix>`_
+* https://haskell4nix.readthedocs.io/index.html
+
+Utilities
+~~~~~~~~~
+
+* `The nix-ls utility <https://github.com/composewell/nix-utils>`_
 
 Resources
 ---------

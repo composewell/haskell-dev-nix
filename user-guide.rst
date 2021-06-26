@@ -114,14 +114,25 @@ working correctly::
     $ nix-env --version
     nix-env (Nix) 2.3.6
 
-Concepts
---------
+Essential Concepts
+------------------
+
+When we say ``nix`` it might mean one of the following:
+
+* the nix language used to describe derivations
+* ``nixpkgs``, the library of nix package derivations
+* the ``nix`` executable and other tools for package management on a host OS
+* ``nixos`` which is a standalone installation of nix without a host OS
 
 Nix Store
 ~~~~~~~~~
 
 Nix knows about a collection of packages and how to build them from
-sources.  Packages may have other packages as dependencies. When
+sources. This knowledge comes from the configuration of nix channels or
+can be manually specified as the source nix expression in various nix
+commands.
+
+Packages may have other packages as dependencies. When
 a package is installed all its dependencies are installed
 first. Each package is installed in a *self contained* directory
 in ``/nix/store``. For example coreutils may be installed in:
@@ -141,6 +152,28 @@ file system::
   total 8
   dr-xr-xr-x    2 root     root          4096 Jan  1  1970 bin
   dr-xr-xr-x    3 root     root          4096 Jun 10 16:45 libexec
+
+The ``nixpkgs`` set
+~~~~~~~~~~~~~~~~~~~
+
+Nix package manager installs packages and their dependencies in a global
+package cache in ``/nix/store`` and makes them available in a "user
+environment".
+
+A Nix expression is a recipe (known as a derivation) to
+build (derive) package binaries from package sources.
+`<https://github.com/NixOS/nixpkgs>`_ is a nix module that defines
+derivations of a large collection of packages from their sources. It
+returns a set of package derivations. The nix package manager installs
+packages from this set.
+
+When we install a package, nix first tries to find prebuilt binaries
+corresponding to the derivation from the `nix binary repository
+<https://cache.nixos.org>`_ if the binaries are not found in the cache
+then the package is built from sources using the nix expression.
+
+`See this reference manual <https://nixos.org/nixpkgs/manual/>`_ for
+defining nix packages using nix expressions.
 
 Nix Profiles
 ~~~~~~~~~~~~
@@ -212,25 +245,6 @@ To know more details about any of the nix commands use `--help`::
 
   $ nix --help
   $ nix-channel --help
-
-Nix Packages and Nix Expressions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Nix package manager installs nix packages and their dependencies
-and makes them available in a "user environment".  A Nix expression
-is a recipe (known as a derivation) to build (derive) package
-binaries from package sources.  Nix distribution is defined by
-a nix expression containing a collection of nix expressions for
-all packages which can be found in the `nix expression repository
-<https://github.com/NixOS/nixpkgs>`_.
-
-When we install a package, nix first tries to find prebuilt binaries
-from the `nix binary repository <https://cache.nixos.org>`_ if the
-binaries are not found in the cache then the package is built from
-sources using the nix expression.
-
-`See this reference manual <https://nixos.org/nixpkgs/manual/>`_ for
-defining nix packages using nix expressions.
 
 Nix Distribution
 ----------------
