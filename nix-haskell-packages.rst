@@ -1,10 +1,9 @@
 Getting Started with Haskell on Nix
 ===================================
 
-See the `Haskell starting guide <getting-started.rst>`_ if
-you are new to Haskell.  See the `Nix getting started guide
-<user-guide.rst>`_ first and then `Nix Package Derivation guide
-<package-derivation.rst>`_ if you are new to nix.
+See the `Haskell starting guide <getting-started.rst>`_ if you are new
+to Haskell.  See the `Nix getting started guide <user-guide.rst>`_ first
+and then `Nix Packages guide <nix-packages.rst>`_ if you are new to nix.
 
 .. contents:: Table of Contents
    :depth: 1

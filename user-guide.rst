@@ -951,9 +951,10 @@ A: You may run into such errors if you are installing many different
 Further Reading
 ---------------
 
-* `Nix Package Derivation Guide <package-derivation.rst>`_
-* `Nix Haskell Development Guide <haskell-development.rst>`_
-* `Nix Reference <reference.rst>`_
+* `Nix Language Reference <nix-language.rst>`_
+* `Nix Package Derivation Guide <nix-derivations.rst>`_
+* `Nix Packages Guide <nix-packages.rst>`_
+* `Nix Haskell Development Guide <nix-haskell-packages.rst>`_
 
 Quick References
 ----------------

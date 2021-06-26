@@ -300,8 +300,8 @@ uninstall packages.
 Build functions and derivations
 -------------------------------
 
-See `Nix Reference <getting-started-nix-reference.rst>`_ for nix
-expression language and builtin functions.
+See `Nix Language Tutorial <nix-language.rst>`_ for nix expression
+language and builtin functions.
 
 The set ``nixpkgs`` consists of a lot of nix functions/builders in
 addition to package derivations. These functions can be used in various
@@ -630,7 +630,7 @@ Further Reading
 
 You are now equipped with all the basic knowledge of Nix and
 Nix packaging, you can now move on to the `Nix Haskell Development Guide
-<haskell-development.rst>`_.
+<nix-haskell-packages.rst>`_.
 
 References
 ----------
