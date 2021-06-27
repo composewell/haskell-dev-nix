@@ -238,7 +238,7 @@ And the following functions::
     ...
   }
 
-``haskell-packages.nix`` is the nix expression that builds the
+``haskell-packages.nix`` is the nix module that builds the
 ``nixpkgs.haskell`` set.
 
 ``nixpkgs.haskell.lib``
@@ -253,69 +253,241 @@ all functions use the ``nix-ls`` utility::
 
 Some commonly used functions are described below:
 
-  * overrideCabal: Override the .cabal of a package
-  * disableCabalFlag/enableCabalFlag
-  * add/append/removeConfigureFlag
-  * overrideSrc: override the src of a package
-  * packageSourceOverrides
-  * doBenchmark/dontBenchmark
-  * doCheck/dontCheck
-  * makePackageSet
-  * markUnbroken
+* overrideCabal = drv: f:
+The function overrideCabal lets you alter the arguments to the
+mkDerivation function::
+
+  x = haskell.lib.overrideCabal haskellPackages.aeson (old: { homepage = old.homepage + "#readme"; })
+
+* packageSourceOverrides = overrides: self: super:
+``Map Name (Either Path VersionNumber) -> HaskellPackageOverrideSet``
+Given a set whose values are either paths or version strings, produces
+a package override set (i.e. (self: super: { etc. })) that sets
+the packages named in the input set to the corresponding versions
+
+* overrideSrc = drv: { src, version ? drv.version }:
+Override the sources for the package and optionaly the version.
+
+* makePackageSet = import ./make-package-set.nix;
+This function takes a file like `hackage-packages.nix` and constructs
+a full package set out of that.
+
+Convenience functions calling overrideCabal:
+* disableCabalFlag/enableCabalFlag
+* add/append/removeConfigureFlag
+* doBenchmark/dontBenchmark
+* doCheck/dontCheck
+* markUnbroken
+
+``nixpkgs.haskell.compiler``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Latest three versions of ghc.
 
 ``nixpkgs.haskell.packages``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``haskell.packages`` attribute has sets for multiple ghc versions
-under it.
+The ``haskell.packages`` attribute contains package sets by ghc versions
+under it. In haskell-packages.nix::
 
-The set of all haskell packages from hackage is ``nixpkgs.haskellPackages``.
-It is defined in nixpkgs/pkgs/top-level/all-packages.nix ::
+  packages = {
+    ...
+    ghc8104 = ... haskell-modules.nix
+                ... make-package-set.nix
+                  ... hackage-packages.nix
+
+The attribute ``nixpkgs.haskellPackages`` is aliased to the package list
+for the prime version of ghc. It is defined in ``all-packages.nix`` ::
 
   nixpkgs = {
     ...
-    haskellPackages = dontRecurseIntoAttrs haskell.packages.ghc883;
+    haskellPackages = dontRecurseIntoAttrs haskell.packages.ghc8104;
     ...
   }
 
+Functions in haskellPackages::
 
-``nixpkgs.haskell.packages``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  # Low level
+  extend
+  override
+  overrideDerivation
+  packageSourceOverrides
+  mkDerivation
 
-See nixpkgs/pkgs/top-level/haskell-packages.nix::
+  # invoke the nix expression in a package
+  # drv is the haskell package derivation (mkDerivation)
+  callPackage = drv: args:
 
-``nixpkgs.haskell.packages.ghcxxx.*`` see 
-nixpkgs/pkgs/development/haskell-modules/make_package_set.nix ::
+  # Generate default.nix using cabal2nix and invoke it to build
+  # extraCabal2nixOptions is a string representing CLI options to the cabal2nix
+  # executable
+  callCabal2nixWithOptions = name: src: extraCabal2nixOptions: args:
+  callCabal2nix = name: src: args: self.callCabal2nixWithOptions name src "" args;
 
-  packages.ghcxxx = {
-    override # Override the haskell package set
-    extend # extend the haskell package set
+  # Generate default.nix for sources at 'src'
+  haskellSrc2nix = { name, src, sha256 ? null, extraCabal2nixOptions ? "" }:
+  hackage2nix = name: version: # Use haskellSrc2nix on source from hackage
+  callHackage # callPackage after hackage2nix, only versions in your all-cabal-hashes
+  callHackageDirect # any package versions directly from hackage
 
-    callHackage
-    callHackageDirect
-    callCabal2nixWithOptions
-    callCabal2nix
-    developPackage
-    ghc
-    ghcWithPackages
-    ghcWithHoogle
-    shellFor
-  }
+  ghcWithHoogle
+  ghcWithPackages
+  hoogleLocal
+  developPackage
+  shellFor
 
-Haskell mkDerivation
-~~~~~~~~~~~~~~~~~~~~
+Sets in haskellPackages::
 
-To dig into Haskell ``mkDerivation`` attributes, see::
+  llvmPackages
 
-    ~/.nix-defexpr/channels/nixpkgs/pkgs/development/haskell-modules/generic-builder.nix
+``nixpkgs.haskellPackages.mkDerivation``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Haskell build functions
-~~~~~~~~~~~~~~~~~~~~~~~
+The function ``haskellPackages.mkDerivation`` is defined in
+``make-package-set.nix``. It overrides ``stdenv.mkDerivation``::
 
-::
+  mkDerivationImpl = pkgs.callPackage ./generic-builder.nix {
+  ...
+  mkDerivation = makeOverridable mkDerivationImpl;
 
-    haskellPackages.ghcWithPackages
-    haskellPackages.ghcWithHoogle
+Some of the argument that it takes are::
+
+  pname
+  version
+  revision ? null
+  sha256 ? null
+  src ? fetchurl { url = "mirror://hackage/${pname}-${version}.tar.gz"; inherit sha256; }
+  description ? null
+  homepage ? "https://hackage.haskell.org/package/${pname}"
+  license
+  maintainers ? null
+  changelog ? null
+
+  # build and configure
+  editedCabalFile ? null
+  buildTarget ? ""
+  configureFlags ? []
+  buildFlags ? []
+  haddockFlags ? []
+  dontStrip ? (ghc.isGhcjs or false)
+  profilingDetail ? "exported-functions"
+  enableDeadCodeElimination ? (!stdenv.isDarwin)  # TODO: use -dead_strip for darwin
+  enableHsc2hsViaAsm ? stdenv.hostPlatform.isWindows && lib.versionAtLeast ghc.version "8.4"
+  enableParallelBuilding ? true
+  useCpphs ? false
+  coreSetup ? false # Use only core packages to build Setup.hs.
+  enableLibraryForGhci ? false # faster ghci load at the expense of space
+  allowInconsistentDependencies ? false # Allow multiple versions of a package
+
+  buildDepends ? []
+  setupHaskellDepends ? []
+  buildTools ? []
+  extraLibraries ? []
+  pkg-configDepends ? []
+  libraryPkgconfigDepends ? []
+  executablePkgconfigDepends ? []
+  testPkgconfigDepends ? []
+  benchmarkPkgconfigDepends ? []
+
+  # Library
+  isLibrary ? !isExecutable
+  enableLibraryProfiling ? !(ghc.isGhcjs or stdenv.targetPlatform.isAarch64 or false)
+  enableSharedLibraries ? !stdenv.hostPlatform.isStatic && (ghc.enableShared or false)
+  enableStaticLibraries ? !(stdenv.hostPlatform.isWindows or stdenv.hostPlatform.isWasm)
+
+  libraryHaskellDepends ? []
+  libraryToolDepends ? []
+  librarySystemDepends ? []
+  libraryFrameworkDepends ? []
+
+  # Executable
+  isExecutable ? false
+  enableExecutableProfiling ? false
+  enableSharedExecutables ? false
+
+  executableHaskellDepends ? []
+  executableToolDepends ? []
+  executableSystemDepends ? []
+  executableFrameworkDepends ? []
+
+  # Test
+  doCheck ? !isCross && lib.versionOlder "7.4" ghc.version
+  doCoverage ? false
+  testTarget ? ""
+  testToolDepends ? []
+  testDepends ? []
+  testHaskellDepends ? []
+  testSystemDepends ? []
+  testFrameworkDepends ? []
+
+  # Benchmark
+  doBenchmark ? false
+  benchmarkToolDepends ? []
+  benchmarkDepends ? []
+  benchmarkHaskellDepends ? []
+  benchmarkSystemDepends ? []
+  benchmarkFrameworkDepends ? []
+
+  # Docs
+  doHaddock ? !(ghc.isHaLVM or false)
+  doHoogle ? true
+  doHaddockQuickjump ? doHoogle && lib.versionAtLeast ghc.version "8.6"
+  hyperlinkSource ? true
+
+  # stdenv generic builder environment
+  preCompileBuildDriver ? null
+  postCompileBuildDriver ? null
+  preUnpack ? null
+  postUnpack ? null
+  patches ? null
+  patchPhase ? null
+  prePatch ? ""
+  postPatch ? ""
+  preConfigure ? null
+  postConfigure ? null
+  preBuild ? null
+  postBuild ? null
+  preHaddock ? null
+  postHaddock ? null
+  installPhase ? null
+  preInstall ? null
+  postInstall ? null
+  checkPhase ? null
+  preCheck ? null
+  postCheck ? null
+  preFixup ? null
+  postFixup ? null
+
+  # Nix
+  platforms ? with lib.platforms; all # GHC can cross-compile
+  hydraPlatforms ? null
+  maxBuildCores ? 16
+  jailbreak ? false
+  broken ? false
+  hardeningDisable ? lib.optional (ghc.isHaLVM or false) "all"
+  shellHook ? ""
+
+  enableSeparateBinOutput ? false
+  enableSeparateDataOutput ? false
+  enableSeparateDocOutput ? doHaddock
+
+  # Pass through attributes
+  passthru ? {}
+
+Defining a package::
+
+  "3d-graphics-examples" = callPackage
+    ({ mkDerivation, base, GLUT, OpenGL, random }:
+     mkDerivation {
+       pname = "3d-graphics-examples";
+       version = "0.0.0.2";
+       sha256 = "02d5q4vb6ilwgvqsgiw8pdc3cflsq495k7q27pyv2gyn0434rcgx";
+       isLibrary = false;
+       isExecutable = true;
+       executableHaskellDepends = [ base GLUT OpenGL random ];
+       description = "Examples of 3D graphics programming with OpenGL";
+       license = lib.licenses.bsd3;
+     }) {};
 
 Custom User Environments
 ------------------------
