@@ -163,11 +163,11 @@ Shell from cabal.project
 * https://gist.github.com/codebje/000df013a2a4b7c10d6014d8bf7bccf3
 * https://input-output-hk.github.io/haskell.nix/reference/library/#callcabalprojecttonix
 
-Custom shell
-~~~~~~~~~~~~
+Shell for a set of packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``haskellPackages.shellFor`` starts a shell with ghc and Haskell or
-non-haskell dependencies of given packages installed.
+``haskellPackages.shellFor`` starts a shell with ghc and dependencies of
+a list of packages. See the ``shellFor`` documentation later in this guide.
 
 To add additional dependencies you can create a derivation with no source but
 only dependencies and add it to the list of packages for ``shellFor``. See
@@ -335,11 +335,23 @@ Functions in haskellPackages::
   callHackage # callPackage after hackage2nix, only versions in your all-cabal-hashes
   callHackageDirect # any package versions directly from hackage
 
-  ghcWithHoogle
   ghcWithPackages
+  ghcWithHoogle
   hoogleLocal
   developPackage
-  shellFor
+
+  # Start a nix shell with dependencies of a list of packages
+  # shellFor returns the envFunc of the Haskell derivation which is
+  # created by stdenv.mkDerivation, attributes that can be used in
+  # stdenv.mkDerivation can also be passed to shellFor.
+  shellFor =
+    {
+      packages
+    , withHoogle ? false
+    , doBenchmark ? false
+    , genericBuilderArgsModifier ? (args: args) # Modify haskell.mkDerivation args
+    , ...
+    } :
 
 Sets in haskellPackages::
 
@@ -388,6 +400,8 @@ Some of the argument that it takes are::
   setupHaskellDepends ? []
   buildTools ? []
   extraLibraries ? []
+
+  # pkg-config depends
   pkg-configDepends ? []
   libraryPkgconfigDepends ? []
   executablePkgconfigDepends ? []
@@ -818,7 +832,7 @@ Q: Got a "framework not found" error when linking an executable::
   Error: build failed
 
 A: Add ``nixpkgs.pkgs.darwin.apple_sdk.frameworks.Cocoa`` to
-  ``executableSystemDepends`` in mkDerivation.
+  ``executableFrameworkDepends`` in mkDerivation.
 
 Quick References
 ----------------
