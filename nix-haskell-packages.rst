@@ -247,32 +247,37 @@ And the following functions::
 This is a library of functions that help in generating
 haskell package derivations. It is defined in
 ``nixpkgs/pkgs/development/haskell-modules/lib.nix``. To see a list of
-all functions use the ``nix-ls`` utility::
+all functions use the `nix-ls utility <https://github.com/composewell/nix-utils>`_::
 
   $ nix-ls nixpkgs.haskell.lib
 
-Some commonly used functions are described below:
+Some commonly used functions are described below::
 
-* overrideCabal = drv: f:
-The function overrideCabal lets you alter the arguments to the
-mkDerivation function::
+  * overrideCabal = drv: f:
 
-  x = haskell.lib.overrideCabal haskellPackages.aeson (old: { homepage = old.homepage + "#readme"; })
+  overrideCabal lets you alter the arguments to the mkDerivation
+  function::
 
-* packageSourceOverrides = overrides: self: super:
-``Map Name (Either Path VersionNumber) -> HaskellPackageOverrideSet``
-Given a set whose values are either paths or version strings, produces
-a package override set (i.e. (self: super: { etc. })) that sets
-the packages named in the input set to the corresponding versions
+    x = haskell.lib.overrideCabal haskellPackages.aeson (old: { homepage = old.homepage + "#readme"; })
 
-* overrideSrc = drv: { src, version ? drv.version }:
-Override the sources for the package and optionaly the version.
+  * packageSourceOverrides = overrides: self: super:
 
-* makePackageSet = import ./make-package-set.nix;
-This function takes a file like `hackage-packages.nix` and constructs
-a full package set out of that.
+  ``Map Name (Either Path VersionNumber) -> HaskellPackageOverrideSet``
+  Given a set whose values are either paths or version strings, produces
+  a package override set (i.e. (self: super: { etc. })) that sets
+  the packages named in the input set to the corresponding versions
+
+  * overrideSrc = drv: { src, version ? drv.version }:
+
+  Override the sources for the package and optionaly the version.
+
+  * makePackageSet = import ./make-package-set.nix;
+
+  This function takes a file like `hackage-packages.nix` and constructs
+  a full package set out of that.
 
 Convenience functions calling overrideCabal:
+
 * disableCabalFlag/enableCabalFlag
 * add/append/removeConfigureFlag
 * doBenchmark/dontBenchmark
@@ -674,7 +679,6 @@ library dependency on `zlib`, in your `default.nix` file use
   in pkg.overrideAttrs
       (attrs: { buildInputs = attrs.buildInputs ++ buildInputs;})
 
-
 Compiling and Linking
 ---------------------
 
@@ -776,6 +780,16 @@ Q: When compiling with ghc/gcc/clang I see an error like this::
 A: ``libz`` (``-lz`` in the error message) is provided by ``nixpkgs.pkgs.zlib``.
    Add ``nixpkgs.pkgs.zlib`` to ``executableSystemDepends`` in ``mkDerivation``.
 
+Q. How to install the dev version of a library to get the include headers? For
+example install gmp headers to compile ghc source?
+
+A. ``nix-env`` cannot select the output paths from a multi-output derivation. See
+https://github.com/NixOS/nixpkgs/pull/76794/commits/611258f063f9c1443a5f95db3fc1b6f36bbf4b52 
+for a workaround.
+
+Mac OS Specific
+~~~~~~~~~~~~~~~
+
 Q: On macOS, getting this error::
 
     cbits/c_fsevents.m:1:10: error:
@@ -794,16 +808,6 @@ A: The ``CoreServices`` framework is missing::
   installing 'apple-framework-CoreServices'
   building '/nix/store/04yl425g4lp3ld5xlzv04b7n8zbmzi3y-user-environment.drv'...
   created 71 symlinks in user environment
-
-Q. How to install the dev version of a library to get the include headers? For
-example install gmp headers to compile ghc source?
-
-A. ``nix-env`` cannot select the output paths from a multi-output derivation. See
-https://github.com/NixOS/nixpkgs/pull/76794/commits/611258f063f9c1443a5f95db3fc1b6f36bbf4b52 
-for a workaround.
-
-Mac OS Specific
-~~~~~~~~~~~~~~~
 
 Q: Got a "framework not found" error when linking an executable::
 
