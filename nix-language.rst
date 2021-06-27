@@ -205,6 +205,12 @@ Anonymous functions are defined as ``pattern: expr``::
     # single argument function
     x: !x # negation function
 
+    # Multiple argument function
+    # Functions are first class, i.e. they can return functions
+
+    let concat = x: y: x + y; # function returning a function
+    in builtins.map (concat "foo") [ "bar" "bla" "abc" ] # Currying
+
     # set argument
     { x, y, z }: x + y + z
 
@@ -233,11 +239,6 @@ Calling a function. Whitespace is function application operator::
 
     # set argument
     f {x = "foo"; y = "bar"; z = "baz";}
-
-Functions are first class, i.e. they can return functions::
-
-    let concat = x: y: x + y; # function returning a function
-    in builtins.map (concat "foo") [ "bar" "bla" "abc" ] # Currying
 
 Debugging
 ~~~~~~~~~
