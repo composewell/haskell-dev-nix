@@ -94,23 +94,96 @@ nixpkgs.stdenv.mkDerivation
 ``stdenv`` provides a wrapper around `builtins.derivation
 <https://nixos.org/nix/manual/#ssec-derivation>`_
 called `stdenv.mkDerivation
-<https://nixos.org/nixpkgs/manual/#sec-using-stdenv>`_.
-It adds a default value for ``system`` and always uses ``bash`` as the
+<https://nixos.org/nixpkgs/manual/#sec-using-stdenv>`_.  It adds
+a default value for ``system`` and always uses ``bash`` as the
 ``builder``, to which the supplied builder is passed as a command-line
-argument::
+argument. mkDerivation extends ``derivation``, it adds some additional
+attributes and passthru attributes::
+
+      lib.extendDerivation validity.handled
+        ({
+           overrideAttrs = f: mkDerivation (attrs // (f attrs));
+           inherit meta passthru;
+           ...
+         } // passthru)
+        (derivation derivationArg);
+
+See ``nixpkgs/pkgs/stdenv/generic/make-derivation.nix``.
+
+mkDerivation arguments
+~~~~~~~~~~~~~~~~~~~~~~
+
+See ``nixpkgs/pkgs/stdenv/generic/make-derivation.nix``.
+
+In addition to ``derivation`` arguments::
 
   stdenv.mkDerivation {
-    name    # name of the package, if pname and version are specified this is
-            # automatically set to "${pname}-${version}"
-    pname   # package name
-    version # package version
-    src     # source directory containing the package source
+    # if pname and version are specified the derivation "name" is
+    # automatically set to "${pname}-${version}"
+    pname   # optional package name
+    version # optional package version
     builder ? # use your own builder script instead of genericBuild
-    buildInputs ? # dependencies e.g. [libbar perl ncurses]
-    buildPhase ? # build phase script
-    installPhase ? # install phase script
-    ...
-  }
+
+    , depsBuildBuild              ? [] # -1 -> -1
+    , depsBuildBuildPropagated    ? [] # -1 -> -1
+    , nativeBuildInputs           ? [] # -1 ->  0  N.B. Legacy name
+    , propagatedNativeBuildInputs ? [] # -1 ->  0  N.B. Legacy name
+    , depsBuildTarget             ? [] # -1 ->  1
+    , depsBuildTargetPropagated   ? [] # -1 ->  1
+
+    , depsHostHost                ? [] #  0 ->  0
+    , depsHostHostPropagated      ? [] #  0 ->  0
+    , buildInputs                 ? [] #  0 ->  1  N.B. Legacy name
+    , propagatedBuildInputs       ? [] #  0 ->  1  N.B. Legacy name
+
+    , depsTargetTarget            ? [] #  1 ->  1
+    , depsTargetTargetPropagated  ? [] #  1 ->  1
+
+    , checkInputs                 ? []
+    , installCheckInputs          ? []
+
+    # Configure Phase
+    , configureFlags ? []
+    , cmakeFlags ? []
+    , mesonFlags ? []
+    , configurePlatforms ? lib.optionals
+    , doCheck ? config.doCheckByDefault or false
+    , doInstallCheck ? config.doCheckByDefault or false
+
+    , strictDeps ? stdenv.hostPlatform != stdenv.buildPlatform
+    , meta ? {}
+    , passthru ? {}
+    , pos ? # position used in error messages and for meta.position
+    , separateDebugInfo ? false
+    , outputs ? [ "out" ]
+    , __darwinAllowLocalNetworking ? false
+    , __impureHostDeps ? []
+    , __propagatedImpureHostDeps ? []
+    , sandboxProfile ? ""
+    , propagatedSandboxProfile ? ""
+
+    , hardeningEnable ? []
+    , hardeningDisable ? []
+
+    , patches ? []
+
+    , __contentAddressed ?
+
+Generic Builder Attributes
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The generic builder provided by stdenv uses environment variables to control
+its behavior. These environment variables are passed as attributes of the
+derivation. Note that we can pass any arbitrary attributes to the derivation
+arg set.
+
+Refer to the nix manual for details about the builder. Some of the attributes
+that we can use::
+
+    src     # source directory containing the package source
+
+Builder environment and execution
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Environment of the builder: In addition to the environment provided by
 ``derivation``:
@@ -137,8 +210,6 @@ Builder script execution:
 
 To checkout the shell functions and environments available in ``$stdenv/setup``
 install ``stdenv`` and visit its store path.
-The source of ``mkDerivation`` can be found in
-``$HOME/.nix-defexpr/channels/nixpkgs/pkgs/stdenv/generic/make-derivation.nix``.
 
 An Example Package
 ------------------
