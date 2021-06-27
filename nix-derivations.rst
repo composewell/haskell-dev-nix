@@ -76,6 +76,11 @@ variables. We have chosen this just to illustrate the environment
 that nix uses to call the builder, which is important to write a real
 builder.
 
+The argument set can have any arbitrary attributes other than the special
+attributes that ``derivation`` recognizes. These attributes are passed as
+environment variables to the builder. For example, we have used the ``src``
+argument above.
+
 Evaluating the Recipe
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -144,6 +149,10 @@ Let's open ``/nix/store/qg1q1hk3rb7ci8fq3ldkhgqvqfnmnal8-dummy.drv`` and see::
       , ("system","x86_64-darwin")
       ]
     )
+
+We can pretty print it::
+
+  $ nix show-derivation /nix/store/qg1q1hk3rb7ci8fq3ldkhgqvqfnmnal8-dummy.drv
 
 Everything that the final derived object depends on has to be in the nix store,
 therefore, our source directory ``./.`` has been copied to
@@ -249,11 +258,12 @@ builtins.derivation
 `builtins.derivation <https://nixos.org/nix/manual/#ssec-derivation>`_
 is a wrapper over ``derivationStrict``.
 
-Some of the arguments are described below::
+The arguments are described below::
 
         name    # required, package name
         system  # required, e.g. "i686-linux" or "x86_64-darwin"
         builder # required, build script, a derivation or a path e.g. ./builder.sh
+
         args ? []    # optional, command line args to be passed to the builder
         outputs ? [] # optional, a list of symbolic outputs of the derivation
                      # e.g.  [ "lib" "headers" "doc" ]
