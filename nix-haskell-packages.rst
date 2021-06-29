@@ -44,8 +44,8 @@ required Haskell packages installed in it.  In the shell we can use
 ``ghc`` and ``cabal`` as usual to compile and build Haskell programs
 that depend on that ``ghc`` and the packages we have installed with it.
 
-Shell with packages
-~~~~~~~~~~~~~~~~~~~
+Shell with nix packages (no dependencies)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Start a shell with ``ghc-8.6.5``::
 
@@ -64,8 +64,11 @@ Let's check what we have in the new shell::
       base-4.12.0.0
       ...
 
-Shell with package environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This may not be very useful as the dependencies of the packages are not
+installed.
+
+Shell with dependencies of a nix package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Each nix derivation in the nix repository has a shell environment
 output artifact available that can be used by nix-shell to recreate the
@@ -99,8 +102,8 @@ See what you have got::
       abstract-deque-0.3
       ...
 
-Shell with packages & dependencies
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Shell with nix packages & their dependencies
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 We can use the nix library function ``haskellPackages.ghcWithPackages``
 to generate the list of packages along with the full set of their dependencies
@@ -114,10 +117,20 @@ mtl]``) to be installed along with ``ghc``. ``ghcWithPackages`` would install
 ``ghc`` and register the packages passed along with all their dependencies with
 ghc.
 
-Shell from cabal file
-~~~~~~~~~~~~~~~~~~~~~
+Shell with only dependencies of a set of packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Create a custom shell environment for a local package::
+``haskellPackages.shellFor`` starts a shell with ghc and dependencies of
+a list of packages. See the ``shellFor`` documentation later in this guide.
+
+To add additional dependencies you can create a derivation with no source but
+only dependencies and add it to the list of packages for ``shellFor``. See
+https://github.com/alpmestan/ghc.nix/blob/master/default.nix .
+
+Shell with dependencies of a source package
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Create a custom shell environment for a local package from the cabal file::
 
   $ cabal2nix --shell . > shell.nix
 
@@ -157,21 +170,13 @@ To use a different compiler than the one specified in ``shell.nix``::
 
   $ nix-shell --argstr compiler ghc865
 
-Shell from cabal.project
-~~~~~~~~~~~~~~~~~~~~~~~~
+Shell with dependencies of a source project
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Create a shell from a cabal.project file:
 
 * https://gist.github.com/codebje/000df013a2a4b7c10d6014d8bf7bccf3
 * https://input-output-hk.github.io/haskell.nix/reference/library/#callcabalprojecttonix
-
-Shell for a set of packages
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-``haskellPackages.shellFor`` starts a shell with ghc and dependencies of
-a list of packages. See the ``shellFor`` documentation later in this guide.
-
-To add additional dependencies you can create a derivation with no source but
-only dependencies and add it to the list of packages for ``shellFor``. See
-https://github.com/alpmestan/ghc.nix/blob/master/default.nix .
 
 Cabal
 ~~~~~
