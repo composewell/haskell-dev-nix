@@ -721,8 +721,11 @@ derivation. See
 https://github.com/NixOS/nixpkgs/pull/76794/commits/611258f063f9c1443a5f95db3fc1b6f36bbf4b52 
 for a workaround.
 
-One way to use the header files is to find the path location of the package in
-the nix store and use it directly from there.
+In ``default.nix`` or in a shell expression we can use the ``dev``
+component as the dependency e.g. ``gmp.dev`` instead of ``gmp``.
+
+A brute force way to use the header files is to find the path location
+of the package in the nix store and use it directly from there.
 
 Using headers and libraries
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
