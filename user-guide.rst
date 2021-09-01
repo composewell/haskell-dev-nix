@@ -63,15 +63,13 @@ Install Nix
 
 Nix installs its shared package store in ``/nix``.
 
-Quick install:
+Quick install::
+  ``curl -L https://nixos.org/nix/install | sh``
 
-* On Linux: ``curl https://nixos.org/nix/install | sh``
-  On Debian Linux you may need: ``sudo sysctl kernel.unprivileged_userns_clone=1``
-* On Mac OS::
-  
-    $ sh <(curl https://nixos.org/nix/install) --darwin-use-unencrypted-nix-store-volume
-
-  On older Macs (https://support.apple.com/en-us/HT208862) you may see
+* On Debian Linux you may need: ``sudo sysctl kernel.unprivileged_userns_clone=1``
+* On macOS >= 10.15 the above command may ask you to run::
+  $ sh <(curl -L https://nixos.org/nix/install) --darwin-use-unencrypted-nix-store-volume
+* On older Mac hardware (https://support.apple.com/en-us/HT208862) you may see
   this error::
 
     error: refusing to create Nix store volume because the boot volume is
