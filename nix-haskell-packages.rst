@@ -123,9 +123,28 @@ Shell with only dependencies of a set of packages
 ``haskellPackages.shellFor`` starts a shell with ghc and dependencies of
 a list of packages. See the ``shellFor`` documentation later in this guide.
 
-To add additional dependencies you can create a derivation with no source but
-only dependencies and add it to the list of packages for ``shellFor``. See
-https://github.com/alpmestan/ghc.nix/blob/master/default.nix .
+To add additional dependencies we can create a derivation with no source but
+only dependencies and add it to the list of packages for ``shellFor``::
+
+    additionalDeps = nixpkgs.haskellPackages.mkDerivation rec {
+              version = "0.1";
+              pname   = "streamly-examples-additional";
+              license = "BSD";
+              src = builtins.filterSource (_: _: false) ./.;
+
+              setupHaskellDepends = with nixpkgs.haskellPackages; [
+                cabal-doctest
+              ];
+            };
+
+    shell = nixpkgs.haskellPackages.shellFor {
+        packages = p:
+          [ p.streamly-examples
+            additionalDeps
+          ];
+
+See https://github.com/alpmestan/ghc.nix/blob/master/default.nix for a more
+complicated shell example for ghc build environment.
 
 Shell with dependencies of a source package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
