@@ -402,7 +402,13 @@ Building Nix shell
 By default nix-shell spawns a shell from ``shell.nix`` if the filename argument
 is not specified.
 
-The file must specify a derivation. ``mkShell`` above generates a derivation.
+The expression file ``file.nix`` must specify a derivation. The function
+``mkShell`` in the example above generates a derivation that creates a shell
+environment.
+
+Note that we can use the specific components of a package as dependencies e.g.
+``gmp.dev`` would install the developer components (e.g. header files) of the
+package, the default package name ``gmp`` is the same as ``gmp.out``.
 
 Customizing Nix distribution
 ----------------------------
