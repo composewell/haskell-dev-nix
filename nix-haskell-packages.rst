@@ -757,10 +757,37 @@ headers installed in the profile.  Similarly, we can use
 to link. In a nix shell we can initialize this variable from
 ``NIX_LDFLAGS_FOR_TARGET`` to find the shell provided libraries.
 
-Export statically linked programs
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Deployment
+----------
 
-Exporting programs from nix store.
+Creating statically linked executables
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+TBD.
+
+Export and import
+~~~~~~~~~~~~~~~~~
+
+Build the project::
+
+  $ nix-build
+
+It will generate the output in ``./result`` directory.  To export the
+whole closure, first time you may want to do this. This may take a while
+and may create a large file because it dumps all the dependencies as
+well::
+
+  $ nix-store --export $(nix-store -qR ./result) > out
+
+After the first iteration you may want to this, it dumps only the current
+project and not dependencies::
+
+  $ nix-store --export ./result > out
+
+Transfer the generate ``out`` to deployment machine and run this on the
+deployment machine::
+
+  $ nix-store --import < out
 
 GHC Development with Nix
 ------------------------
