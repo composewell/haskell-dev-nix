@@ -855,6 +855,10 @@ A. ``nix-env`` cannot select the output paths from a multi-output derivation. Se
 https://github.com/NixOS/nixpkgs/pull/76794/commits/611258f063f9c1443a5f95db3fc1b6f36bbf4b52 
 for a workaround.
 
+The easiest way with cabal is to export PKG_CONFIG_PATH as follows::
+
+   export PKG_CONFIG_PATH=/nix/store/yvjxzki0lhdzqsksliw2pf1v8xi9bd1x-icu4c-70.1-dev/lib/pkgconfig/
+
 Mac OS Specific
 ~~~~~~~~~~~~~~~
 
