@@ -751,6 +751,11 @@ profiles are already linked from ``gcroots``.  If you do not want your
 private profiles to be garbage collected create symlinks to those in
 ``/nix/var/nix/gcroots``.
 
+To pin the dependencies of a package so that they do not get garbage collected,
+use ::
+
+   nix-instantiate file.nix --indirect --add-root .nix-gc-roots/file
+
 Nix Shell
 ---------
 
