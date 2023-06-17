@@ -632,6 +632,7 @@ Query packages available under a Nix expression defined by a file or URL::
 
 Install a package from a Nix expression ::
 
+  $ nix-env -f https://github.com/NixOS/nixpkgs/archive/refs/tags/23.05.tar.gz -iA gnupg
   $ nix-env -f ~/foo.nix -i '.*' # install all derivations from foo.nix
 
 Working with Profiles
