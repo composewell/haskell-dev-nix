@@ -7,7 +7,7 @@ Getting Started with Nix
 What is Nix?
 ------------
 
-Nix is package manager that can be installed on Linux or Mac OS. Unlike
+Nix is a package manager that can be installed on Linux or Mac OS. Unlike
 other package managers Nix does not use one single global view of some
 fixed versions of packages. It can create a custom environment with
 whatever versions of packages you need and their dependencies, on the
@@ -968,7 +968,8 @@ Install
 
 * `Nix package manager install script <https://nixos.org/nix/install>`_
 * `Nix package manager download <https://nixos.org/nix/download.html>`_
-* http://sandervanderburg.blogspot.com/2013/06/setting-up-multi-user-nix-installation.html
+..
+  * http://sandervanderburg.blogspot.com/2013/06/setting-up-multi-user-nix-installation.html
 
 Search, Install Packages
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -980,19 +981,20 @@ Search, Install Packages
 Distribution Repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* `Nix package expression repository <https://github.com/NixOS/nixpkgs>`_
-* `Nix package distribution channels <https://github.com/NixOS/nixpkgs-channels>`_
+* `Nix package collection repository <https://github.com/NixOS/nixpkgs>`_
+* `Nix channels <https://channels.nixos.org/>`_
 * `NixOS prebuilt binary cache <https://cache.nixos.org>`_
 
 Learning
 ~~~~~~~~
 
 * https://nixos.org/nixos/nix-pills/ The best place to start
+* `Nix Cookbook <https://nix.dev/>`_
 
 Reference Docs
 ~~~~~~~~~~~~~~
 
-* `Nix Package Manager (Nix) Manual <https://nixos.org/nix/manual/>`_
+* `Nix Package Manager (nix) Manual <https://nixos.org/nix/manual/>`_
 * `Nix Package Collection (nixpkgs) and language reference <https://nixos.org/nixpkgs/manual/>`_
 
   * `Writing Nix expressions <https://nixos.org/nix/manual/#chap-writing-nix-expressions>`_
@@ -1000,4 +1002,3 @@ Reference Docs
 
 * `Nix package manager home page <https://nixos.org/nix/>`_
 * `NixOS home page <https://nixos.org/>`_
-* `Nix Cookbook <https://nix.dev/>`_
